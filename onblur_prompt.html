@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Jeditable Edit In Place Demo</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="smoke/smoke.css" type="text/css" media="screen" />
+<script src="smoke/smoke.js" type="text/javascript"></script>
+
+<script src="jquery.jeditable.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+$(function() {
+
+	var
+	diff_time = (new Date).getTime(),
+	onblur_func = function(text, settings) {
+		var self = this, // this - is exposed to jeditable element as it was called with .apply
+			reset = $.editable.types[settings.type].reset || $.editable.types['defaults'].reset,
+			form  = $(self).find('form');
+
+		// if time passed between two last calls is less then 400ms,
+		// this mean only one bug: first modal popup after ESC clicked and the second after the 'discard' or 'continue' clicked.
+		if (((new Date).getTime() - diff_time) < 500) {
+			//console.log('Diff: ', (new Date).getTime() - diff_time);
+			return;
+		}
+
+		// if no form present, exit, prevent bug when focus lost and cancel button clicked
+		if (form.length === 0) {
+			return;
+		}
+
+		// handle some strange smoke.js bug, that pops modal twice
+		if ($('.smoke-base').last().length && $('.smoke-base').last().find('.smoke').length) {
+			return;
+		}
+
+		// test if text is changed? discard if not
+		if (self.revert === text) {
+			reset.apply(form, [settings, self]);
+			return;
+		}
+
+		smoke.confirm('What you wanna do?', function(e) {
+			if (e) {
+				// discard changes
+				reset.apply(form, [settings, self]);
+			}else{
+				// continue editing
+				diff_time = (new Date).getTime();
+				$(self).find('input').focus();
+			}
+		}, {cancel: 'continue editing', ok: 'discard changes', enable_keys: false});
+	};
+
+	$(".editable_textarea").editable("some-save.php", {
+		indicator : "<img src='img/indicator.gif'>",
+		tooltip   : "Click to edit...",
+		submit    : "OK",
+		cancel    : "Cancel",
+		onblur    : onblur_func,
+		onesc     : onblur_func
+	});
+
+});
+</script>
+
+<style type="text/css">
+.editable input[type=submit] {
+  color: #F00;
+  font-weight: bold;
+}
+.editable input[type=button] {
+  color: #0F0;
+  font-weight: bold;
+}
+.editable_textarea {
+	padding:5px;
+	background: lightyellow;
+}
+</style>
+</head>
+<body>
+	<h1>Hola! Test No 2, add confirm feature to jeditable</h1>
+
+
+	<h2>Normal input</h2>
+	<p class="editable_textarea">Click here.</p>
+
+
+	<h2>Shachar explains:</h2>
+	<p>
+		1. Well, after examaining the code I see we can pass callback to fire on blur, so i'm making this part external.<br/>
+		2. The second part was to attach same functionality on ESC key, but there is not simple external way to do it,
+		So I patched the core code to accept flag for overriding the ESC functionality same way as they did onblur.<br/>
+		3. (2) this helped me reuse the same functionality for both onblur and esc clicking.<br/>
+		4. I don't have time to develop lightbox so I'm using open-source plugin.<br/>
+		5. Testing if the text really changed and only then prompt the user .<br><br>
+
+		<i>This was tricky mission, many edge cases to handle, jeditable uses timer tircks,
+			needed to patch smoke.js plugins to disable esc bindings,
+			when clicking on actions buttons the focues loses and that brings another modal box.
+			I tried to minimize changes to the core code and keep the elegent.</i>
+	</p>
+
+
+</body>
+</html>

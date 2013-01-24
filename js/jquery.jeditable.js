@@ -1,12 +1,12 @@
 /*
 +-----------------------------------------------------------------------+
 | Copyright (c) 2006-2007 Mika Tuupola, Dylan Verheul                   |
-| All rights reserved.                                                  |  
+| All rights reserved.                                                  |
 |                                                                       |
 | Redistribution and use in source and binary forms, with or without    |
 | modification, are permitted provided that the following conditions    |
 | are met:                                                              |
-|                                                                       | 
+|                                                                       |
 | o Redistributions of source code must retain the above copyright      |
 |   notice, this list of conditions and the following disclaimer.       |
 | o Redistributions in binary form must reproduce the above copyright   |
@@ -39,7 +39,7 @@
   * @name  jEditable
   * @type  jQuery
   * @param String  target             POST URL or function name to send edited content
-  * @param Hash    options            additional options 
+  * @param Hash    options            additional options
   * @param String  options[name]      POST parameter name of edited content
   * @param String  options[id]        POST parameter name of edited div id
   * @param Hash    options[submitdata] Extra parameters to send when submitting edited content.
@@ -47,7 +47,7 @@
   * @param Integer options[rows]      number of rows if using textarea
   * @param Integer options[cols]      number of columns if using textarea
   * @param Mixed   options[height]    'auto', 'none' or height in pixels
-  * @param Mixed   options[width]     'auto', 'none' or width in pixels 
+  * @param Mixed   options[width]     'auto', 'none' or width in pixels
   * @param String  options[loadurl]   URL to fetch external content before editing
   * @param String  options[loadtype]  Request type for load url. Should be GET or POST.
   * @param String  options[loadtext]  Text to display while loading external content.
@@ -62,16 +62,16 @@
   * @param String  options[cssclass]  CSS class to apply to input form. 'inherit' to copy from parent.
   * @param String  options[style]     Style to apply to input form 'inherit' to copy from parent.
   * @param String  options[select]    true or false, when true text is highlighted
-  *             
+  *
   */
 
 jQuery.fn.editable = function(target, options, callback) {
 
     /* prevent elem has no properties error */
-    if (this.length === 0) { 
-        return(this); 
+    if (this.length === 0) {
+        return(this);
     }
-    
+
     var settings = {
         target     : target,
         name       : 'value',
@@ -86,29 +86,29 @@ jQuery.fn.editable = function(target, options, callback) {
         loaddata   : {},
         submitdata : {}
     };
-        
+
     if(options) {
         jQuery.extend(settings, options);
     }
-    
+
     /* setup some functions */
     var plugin   = jQuery.editable.types[settings.type].plugin || function() { };
     var submit   = jQuery.editable.types[settings.type].submit || function() { };
-    var buttons  = jQuery.editable.types[settings.type].buttons 
+    var buttons  = jQuery.editable.types[settings.type].buttons
                 || jQuery.editable.types['defaults'].buttons;
-    var content  = jQuery.editable.types[settings.type].content 
+    var content  = jQuery.editable.types[settings.type].content
                 || jQuery.editable.types['defaults'].content;
-    var element  = jQuery.editable.types[settings.type].element 
+    var element  = jQuery.editable.types[settings.type].element
                 || jQuery.editable.types['defaults'].element;
 
     callback = callback || function() { };
-          
+
     jQuery(this).attr('title', settings.tooltip);
 
     /* temporary fix for auto width and height */
     settings.autowidth  = 'auto' == settings.width;
     settings.autoheight = 'auto' == settings.height;
-                
+
     jQuery(this)[settings.event](function(e) {
 
         /* save this to self because this changes when scope changes */
@@ -121,21 +121,21 @@ jQuery.fn.editable = function(target, options, callback) {
 
         /* figure out how wide and tall we are */
         if (settings.width != 'none') {
-            settings.width = 
+            settings.width =
                settings.autowidth ? jQuery(self).width()  : settings.width;
         }
         if (settings.height != 'none') {
-            settings.height = 
+            settings.height =
                 settings.autoheight ? jQuery(self).height() : settings.height;
         }
-                
+
         self.editing    = true;
         self.revert     = jQuery(self).html();
         self.innerHTML  = '';
 
         /* create the form object */
         var f = document.createElement('form');
-        
+
         /* apply css or style or both */
         if (settings.cssclass) {
             if ('inherit' == settings.cssclass) {
@@ -144,21 +144,21 @@ jQuery.fn.editable = function(target, options, callback) {
                 jQuery(f).attr('class', settings.cssclass);
             }
         }
-        
+
         if (settings.style) {
             if ('inherit' == settings.style) {
                 jQuery(f).attr('style', jQuery(self).attr('style'));
                 /* IE needs the second line or display wont be inherited */
-                jQuery(f).css('display', jQuery(self).css('display'));                
+                jQuery(f).css('display', jQuery(self).css('display'));
             } else {
                 jQuery(f).attr('style', settings.style);
             }
         }
-        
+
         /*  Add main input element to form and store it in i. */
         var i = element.apply(f, [settings, self]);
 
-        /* maintain bc with 1.1.1 and earlier versions */        
+        /* maintain bc with 1.1.1 and earlier versions */
         if (settings.getload) {
             settings.loadurl    = settings.getload;
             settings.loadtype = 'GET';
@@ -173,7 +173,7 @@ jQuery.fn.editable = function(target, options, callback) {
                 i.disabled = true;
                 content.apply(f, [settings.loadtext, settings, self]);
             }, 100);
-                
+
             var loaddata = {};
             loaddata[settings.id] = self.id;
             if (jQuery.isFunction(settings.loaddata)) {
@@ -186,7 +186,7 @@ jQuery.fn.editable = function(target, options, callback) {
                url  : settings.loadurl,
                data : loaddata,
                success: function(string) {
-               	  window.clearTimeout(t);                
+               	  window.clearTimeout(t);
                   content.apply(f, [string, settings, self]);
                   i.disabled = false;
                }
@@ -197,29 +197,29 @@ jQuery.fn.editable = function(target, options, callback) {
                 var str = settings.data.apply(self, [self.revert, settings]);
             }
             content.apply(f, [str, settings, self]);
-        } else { 
+        } else {
             content.apply(f, [self.revert, settings, self]);
         }
 
         i.name  = settings.name;
-        
+
         /* add buttons to the form */
         buttons.apply(f, [settings, self]);
 
         /* add created form to self */
         self.appendChild(f);
-        
+
         /* highlight input contents when requested */
         if (settings.select) {
             i.select();
         }
-         
+
         /* attach 3rd party plugin if requested */
-        plugin.apply(f, [settings, self]);            
+        plugin.apply(f, [settings, self]);
 
         /* focus to first visible form element */
         jQuery(":input:visible:enabled:first", f).focus();
-        
+
         /* discard changes if pressing esc */
         jQuery(i).keydown(function(e) {
             if (e.keyCode == 27) {
@@ -228,34 +228,34 @@ jQuery.fn.editable = function(target, options, callback) {
             }
         });
 
-        /* discard, submit or nothing with changes when clicking outside */
-        /* do nothing is usable when navigating with tab */
-        var t;
-        if ('cancel' == settings.onblur) {
-            jQuery(i).blur(function(e) {
-                t = setTimeout(reset, 500);
-            });
-        } else if ('submit' == settings.onblur) {
-            jQuery(i).blur(function(e) {
-                jQuery(f).submit();
-            });
-        } else {
-            jQuery(i).blur(function(e) {
-              /* TODO: maybe something here */
-            });
-        }
+		/* discard, submit or nothing with changes when clicking outside */
+		/* do nothing is usable when navigating with tab */
+		var t;
+		if ('cancel' == settings.onblur) {
+			jQuery(i).blur(function(e) {
+				t = setTimeout(reset, 500);
+			});
+		} else if ('submit' == settings.onblur) {
+			jQuery(i).blur(function(e) {
+				jQuery(f).submit();
+			});
+		} else {
+			jQuery(i).blur(function(e) {
+			  /* TODO: maybe something here */
+			});
+		}
 
         jQuery(f).submit(function(e) {
 
-            if (t) { 
+            if (t) {
                 clearTimeout(t);
             }
 
             /* do no submit */
-            e.preventDefault(); 
-            
+            e.preventDefault();
+
             /* if this input type has a call before submit hook, call it */
-            submit.apply(f, [settings, self]);            
+            submit.apply(f, [settings, self]);
 
             /* check if given target is function */
             if (jQuery.isFunction(settings.target)) {
@@ -273,7 +273,7 @@ jQuery.fn.editable = function(target, options, callback) {
                     jQuery.extend(submitdata, settings.submitdata.apply(self, [self.revert, settings]));
                 } else {
                     jQuery.extend(submitdata, settings.submitdata);
-                }          
+                }
 
                 /* show the saving indicator */
                 jQuery(self).html(settings.indicator);
@@ -283,7 +283,7 @@ jQuery.fn.editable = function(target, options, callback) {
                     callback.apply(self, [self.innerHTML, settings]);
                 });
             }
-                        
+
             return false;
         });
 
@@ -293,19 +293,19 @@ jQuery.fn.editable = function(target, options, callback) {
         }
 
     });
-    
+
     return(this);
 };
 
 /**
   *
   */
- 
+
 jQuery.editable = {
     types: {
         defaults: {
             element : function(settings, original) {
-                var input = jQuery('<input type="hidden">');                
+                var input = jQuery('<input type="hidden">');
                 jQuery(this).append(input);
                 return(input);
             },
@@ -368,14 +368,14 @@ jQuery.editable = {
             content : function(string, settings, original) {
                 /* IE borks if we do not store select in separate variable. */
                 var select = jQuery('select', this);
-                if (String == string.constructor) { 	 
+                if (String == string.constructor) {
                     eval ("var json = " + string);
                     for (var key in json) {
                         if ('selected' == key) {
                             continue;
-                        } 
+                        }
                         var option = $('<option>').val(key).append(json[key]);
-                        select.append(option); 	 
+                        select.append(option);
                     }
                     /* TODO: leave only this to content so IE works too! */
 /*
@@ -395,12 +395,12 @@ jQuery.editable = {
                 select.children().each(function() {
                     if (jQuery(this).val() == which) {
                         jQuery(this).attr('selected', 'selected');
-                    };                    
+                    };
                 });
             }
         }
     },
-    
+
     /* Add new input type */
     addInputType: function(name, input) {
         jQuery.editable.types[name] = input;
